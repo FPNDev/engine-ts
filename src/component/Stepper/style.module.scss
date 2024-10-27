@@ -1,0 +1,19 @@
+.stepper {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 100%;
+}
+
+.buttons {
+    display: flex;
+    margin: auto 0 0 0;
+    padding: 1rem;
+}
+
+.button {
+    user-select: none;
+    
+    &.next {
+        margin: 0 0 0 auto;
+    }
+}
