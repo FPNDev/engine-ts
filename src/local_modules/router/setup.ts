@@ -124,7 +124,7 @@ export function setupRouter(element: Element, routes: Route[]) {
   let activeLocation: Location;
   let activePath: RouteWithComponent;
   let activeRender: Component | undefined;
-  let routeParams: RegExpMatchArray | null;
+  let routeParams: Readonly<RegExpMatchArray> | null;
 
   const runNavigation = async () => {
     const oldLoc = loc;
@@ -139,7 +139,7 @@ export function setupRouter(element: Element, routes: Route[]) {
 
         activeLocation = loc;
         activePath = foundLocation;
-        routeParams = matchedParams;
+        routeParams = Object.freeze(matchedParams);
         activeRender = render(element, activePath, activeRender);
 
         if (previousPath) {
@@ -167,7 +167,7 @@ export function setupRouter(element: Element, routes: Route[]) {
       return runNavigation();
     },
     getQueryParams() {
-      return routeParams && Object.freeze(routeParams);
+      return routeParams;
     },
   };
 }
