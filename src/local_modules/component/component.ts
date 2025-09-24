@@ -1,6 +1,5 @@
 abstract class Component<T extends Node = Node> {
-  _children = new Set<Component<Node>>();
-
+  private _childComponents = new Set<Component>();
   private _node?: T;
 
   get node() {
@@ -9,15 +8,9 @@ abstract class Component<T extends Node = Node> {
 
   abstract render(): T;
 
-  protected connect(components: Component<Node>[]) {
-    for (const component of components) {
-      this._children.add(component);
-    }
-  }
-
-  protected disconnect(components: Component<Node>[]) {
-    for (const component of components) {
-      this._children.delete(component);
+  attach(childComponents: Component[]) {
+    for (let i = 0, len = childComponents.length; i < len; i++) {
+      this._childComponents.add(childComponents[i]);
     }
   }
 
@@ -25,7 +18,7 @@ abstract class Component<T extends Node = Node> {
     this._node?.parentNode?.removeChild(this._node);
     this.onDisconnect?.();
 
-    for (const child of this._children.values()) {
+    for (const child of this._childComponents.values()) {
       child.destroy();
     }
   }

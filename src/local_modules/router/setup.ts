@@ -12,9 +12,9 @@ function findLocation(routes: (Route | RouteWithCompiledPath)[]) {
 
   async function checkPath(
     routes: readonly (Route | RouteWithCompiledPath)[],
-    pathPart: string | RegExp = ''
+    pathPart: string | RegExp = '',
   ): Promise<[RouteWithComponent, RegExpMatchArray | null]> {
-    for (let route of routes) {
+    for (const route of routes) {
       let fullPath: string | RegExp;
 
       let routeMatches = false;
@@ -45,7 +45,7 @@ function findLocation(routes: (Route | RouteWithCompiledPath)[]) {
             : (<RegExp>route.path).source;
 
           (<RouteWithCompiledPath>route).compiledPath = new RegExp(
-            '^' + source + '/?'
+            '^' + source + '/?',
           );
         }
 
@@ -97,7 +97,7 @@ function findLocation(routes: (Route | RouteWithCompiledPath)[]) {
 function render(
   element: Element,
   route: RouteWithComponent,
-  activeRender?: Component
+  activeRender?: Component,
 ) {
   if (typeof route.component === 'string') {
     activeRender?.destroy();
@@ -114,6 +114,14 @@ function render(
     return activeRender;
   }
 }
+export type RouteUpdateEvent = Event & {
+  detail?: {
+    previousPath: RouteWithComponent;
+    currentPath: RouteWithComponent;
+    previousLocation: Location;
+    currentLocation: Location;
+  };
+};
 
 export function setupRouter(element: Element, routes: Route[]) {
   let loc: Location;
@@ -140,18 +148,22 @@ export function setupRouter(element: Element, routes: Route[]) {
         activeLocation = loc;
         activePath = foundLocation;
         routeParams = Object.freeze(matchedParams);
-        activeRender = render(element, activePath, activeRender);
 
-        if (previousPath) {
+        const newRender = render(element, activePath, activeRender);
+        const reusingInstance = newRender === activeRender;
+
+        activeRender = newRender;
+
+        if (reusingInstance) {
           window.dispatchEvent(
-            new CustomEvent('routeChange', {
+            new CustomEvent<RouteUpdateEvent['detail']>('routeUpdate', {
               detail: {
                 previousPath,
                 currentPath: activePath,
                 previousLocation,
                 currentLocation: activeLocation,
               },
-            })
+            }),
           );
         }
       }
@@ -159,7 +171,7 @@ export function setupRouter(element: Element, routes: Route[]) {
   };
 
   window.addEventListener('popstate', runNavigation);
-  requestAnimationFrame(runNavigation);
+  runNavigation();
 
   return {
     go(url: string) {
