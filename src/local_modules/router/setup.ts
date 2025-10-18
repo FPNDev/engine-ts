@@ -12,7 +12,7 @@ function findLocation(routes: (Route | RouteWithCompiledPath)[]) {
 
   async function checkPath(
     routes: readonly (Route | RouteWithCompiledPath)[],
-    pathPart: string | RegExp = '',
+    pathPart: string | RegExp = ''
   ): Promise<[RouteWithComponent, RegExpMatchArray | null]> {
     for (const route of routes) {
       let fullPath: string | RegExp;
@@ -45,7 +45,7 @@ function findLocation(routes: (Route | RouteWithCompiledPath)[]) {
             : (<RegExp>route.path).source;
 
           (<RouteWithCompiledPath>route).compiledPath = new RegExp(
-            '^' + source + '/?',
+            '^' + source + '/?'
           );
         }
 
@@ -97,20 +97,23 @@ function findLocation(routes: (Route | RouteWithCompiledPath)[]) {
 function render(
   element: Element,
   route: RouteWithComponent,
-  activeRender?: Component,
+  activeRender?: Component
 ) {
   if (typeof route.component === 'string') {
-    activeRender?.destroy();
-    element.innerHTML = route.component;
-  } else if (activeRender?.constructor !== route.component) {
-    activeRender?.destroy();
-    element.innerHTML = '';
+    if (activeRender) {
+      activeRender?.destroy();
+    }
+    element.replaceChildren(route.component);
+  } else if (!activeRender || activeRender?.constructor !== route.component) {
+    if (activeRender) {
+      activeRender?.destroy();
+    }
 
     const instance = new route.component();
-    element.appendChild(instance.createView());
+    element.replaceChildren(instance.createView());
 
     return instance;
-  } else if (activeRender) {
+  } else {
     return activeRender;
   }
 }
@@ -124,7 +127,7 @@ export type RouteUpdateEvent = Event & {
 };
 
 export function setupRouter(element: Element, routes: Route[]) {
-  let loc: Location;
+  let previousLocation: Location | undefined;
   let queuedPromise: Promise<
     [RouteWithComponent, RegExpMatchArray | null]
   > | void;
@@ -135,26 +138,39 @@ export function setupRouter(element: Element, routes: Route[]) {
   let routeParams: Readonly<RegExpMatchArray> | null;
 
   const runNavigation = async () => {
-    const oldLoc = loc;
-    loc = { ...location };
-    if (oldLoc?.href !== loc?.href) {
+    if (
+      !previousLocation ||
+      !activeLocation ||
+      previousLocation.href !== activeLocation.href
+    ) {
       const currentPromise = (queuedPromise = findLocation(routes));
       const [foundLocation, matchedParams] = await currentPromise;
 
       if (foundLocation && currentPromise === queuedPromise) {
         const previousPath = activePath;
-        const previousLocation = activeLocation;
+        previousLocation = activeLocation;
 
-        activeLocation = loc;
+        activeLocation = {
+          href: location.href,
+          pathname: location.pathname,
+          search: location.search,
+          hash: location.hash,
+          origin: location.origin,
+          protocol: location.protocol,
+          host: location.host,
+          hostname: location.hostname,
+          port: location.port,
+        } as Location;
         activePath = foundLocation;
         routeParams = Object.freeze(matchedParams);
 
         const newRender = render(element, activePath, activeRender);
-        const reusingInstance = newRender === activeRender;
+        const reusingInstance =
+          newRender instanceof Component && newRender === activeRender;
 
         activeRender = newRender;
 
-        if (reusingInstance) {
+        if (previousPath && reusingInstance) {
           window.dispatchEvent(
             new CustomEvent<RouteUpdateEvent['detail']>('routeUpdate', {
               detail: {
@@ -163,7 +179,7 @@ export function setupRouter(element: Element, routes: Route[]) {
                 previousLocation,
                 currentLocation: activeLocation,
               },
-            }),
+            })
           );
         }
       }

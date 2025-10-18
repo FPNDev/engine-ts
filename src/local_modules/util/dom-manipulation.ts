@@ -17,12 +17,12 @@ const htmlRenderer = element('body');
 const HTMLReplacementComment = '__htmlelement';
 
 export function escHTML(text: string) {
-  htmlRenderer.innerText = text;
+  htmlRenderer.textContent = text;
   return htmlRenderer.innerHTML;
 }
 export function unescHTML(text: string) {
   htmlRenderer.innerHTML = text;
-  return htmlRenderer.innerText;
+  return htmlRenderer.textContent;
 }
 
 export function html(
