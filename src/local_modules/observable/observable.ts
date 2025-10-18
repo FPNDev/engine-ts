@@ -1,5 +1,5 @@
 type Observer<T> = (data: T) => void;
-type Pipe<T, K> = (data: T) => K;
+type Pipe<T, K> = (data: T) => K | Promise<K>;
 
 interface Notifier<T> {
   (data: T): void;
@@ -38,22 +38,28 @@ const Observable = <T>(
     doneObservers.push(observer);
   };
 
-  const notify = (data: T) => {
+  const notify = async (data: T) => {
     if (!open) {
       return;
     }
 
-    // Apply pre-built pipe chain if any
-    const pipedData =
-      pipes && pipes.length > 0
-        ? (pipes.reduce(
-            (acc: unknown, pipe) => pipe(acc),
-            data as unknown
-          ) as T)
-        : data;
+    let pipedData: unknown = data;
+    if (pipes) {
+      for (let i = 0, pipesLen = pipes.length; open && i < pipesLen; i++) {
+        pipedData = pipes[i](pipedData);
+        if (pipedData instanceof Promise) {
+          pipedData = await pipedData;
+        }
+      }
+    }
+
+    // Check if still open after async pipes
+    if (!open) {
+      return;
+    }
 
     for (const observer of observers) {
-      observer(pipedData);
+      observer(<T>pipedData);
     }
   };
 

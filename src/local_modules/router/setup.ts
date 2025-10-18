@@ -13,7 +13,7 @@ function findLocation(routes: (Route | RouteWithCompiledPath)[]) {
   async function checkPath(
     routes: readonly (Route | RouteWithCompiledPath)[],
     pathPart: string | RegExp = ''
-  ): Promise<[RouteWithComponent, RegExpMatchArray | null]> {
+  ): Promise<[RouteWithComponent, RegExpMatchArray | null] | undefined> {
     for (const route of routes) {
       let fullPath: string | RegExp;
 
@@ -81,17 +81,21 @@ function findLocation(routes: (Route | RouteWithCompiledPath)[]) {
           return [route, regExpMatch];
         }
       } else if ('children' in route && route.children?.length) {
-        const match = checkPath(route.children, fullPath!);
+        const match = await checkPath(route.children, fullPath!);
         if (match) {
           return match;
         }
       }
     }
-
-    throw new Error('path not found');
   }
 
-  return checkPath(routes);
+  return checkPath(routes).then((routeMatch) => {
+    if (!routeMatch) {
+      throw new Error('path not found');
+    }
+
+    return routeMatch;
+  });
 }
 
 function render(
