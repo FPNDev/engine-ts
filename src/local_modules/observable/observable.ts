@@ -16,6 +16,10 @@ class BaseObservable<T> {
     this.observers.push(observer);
   }
   notify(data: T) {
+    if (!this.open) {
+      return;
+    }
+
     for (const observer of this.observers) {
       observer(data);
     }
