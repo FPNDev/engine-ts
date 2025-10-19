@@ -12,9 +12,18 @@ class BaseObservable<T> {
   }
 
   subscribe(observer: Observer<T>) {
+    let subscribed: boolean | undefined;
     if (this.open) {
+      subscribed = true;
       this.observers.push(observer);
     }
+
+    return () => {
+      if (subscribed) {
+        this.observers.splice(this.observers.indexOf(observer), 1);
+        subscribed = undefined;
+      }
+    };
   }
   notify(data: T) {
     if (!this.open) {
@@ -49,4 +58,4 @@ const Observable = extendObservableWithPipes(BaseObservable);
 type Observable<T> = InstanceType<typeof Observable<T>>;
 
 export { Observable };
-export type { BaseObservable };
+export type { BaseObservable, Observer };
