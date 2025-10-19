@@ -1,8 +1,6 @@
-import { Observable } from "./observable";
+import { Observable } from './observable';
 
-function of(value?: never): Observable<never>;
-function of<T>(value: T): Observable<T>;
-function of<T>(value?: T): Observable<T | never> {
+function of<T>(value?: T): Observable<T> {
   const obs = new Observable<T>();
   if (value !== undefined) {
     obs.notify(value);
@@ -10,5 +8,4 @@ function of<T>(value?: T): Observable<T | never> {
   return obs;
 }
 
-const a = of();
-const b = of('a');
+export { of };
