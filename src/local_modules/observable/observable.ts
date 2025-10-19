@@ -13,7 +13,9 @@ class BaseObservable<T> {
   }
 
   subscribe(observer: Observer<T>) {
-    this.observers.push(observer);
+    if (this.open) {
+      this.observers.push(observer);
+    }
   }
   notify(data: T) {
     if (!this.open) {

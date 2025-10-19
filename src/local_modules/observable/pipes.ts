@@ -55,7 +55,7 @@ function extendObservableWithPipes(
     pipe<POut>(
       pipes: PipesArray<T, POut> | [],
     ): PipedObservable<POut> | PipedObservable<T> {
-      if (pipes.length === 0) {
+      if (pipes.length === 0 || !this.open) {
         return this;
       }
       const joinedPipe = joinPipes(pipes);
