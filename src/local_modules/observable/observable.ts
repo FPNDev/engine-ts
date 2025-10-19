@@ -5,8 +5,7 @@ type Observer<T> = (data: T) => void;
 class BaseObservable<T> {
   private observers: Observer<T>[] = [];
   private doneObservers: Observer<void>[] = [];
-
-  protected open = true;
+  private open = true;
 
   get closed() {
     return !this.open;
